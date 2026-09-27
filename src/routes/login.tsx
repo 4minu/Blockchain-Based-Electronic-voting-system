@@ -1,6 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { VoterLogin } from "@/components/voter-login";
+import { LoginScreen } from "@/components/login-screen";
 
-export const Route = createFileRoute("/login")({
-  component: VoterLogin,
-});
+export const Route = createFileRoute("/login")({ component: LoginScreen });
