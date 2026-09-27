@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function shortHash(hash: string, size = 10) {
-  if (!hash) return "\u2014";
+  if (!hash) return "—";
   if (hash.length <= size * 2) return hash;
-  return `${hash.slice(0, size)}\u2026${hash.slice(-6)}`;
+  return `${hash.slice(0, size)}…${hash.slice(-6)}`;
 }

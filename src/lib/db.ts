@@ -235,4 +235,9 @@ if (typeof window === "undefined" && dbSource === "pglite") {
     console.error("[db] PGLite bootstrap failed:", err);
     throw err;
   });
+  void globalBoot.__pgBootstrapPromise__.then(() =>
+    import("./election-seed.server")
+      .then((m) => m.ensureSeeded())
+      .catch((err) => console.error("[db] election seed failed:", err)),
+  );
 }
