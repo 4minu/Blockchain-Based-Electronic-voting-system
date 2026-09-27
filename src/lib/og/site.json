@@ -1,6 +1,4 @@
 {
   "title": "SOE Chainvote",
-  "description": "Software Engineering departmental elections on a permissioned hash-chain, with offline booth support.",
-  "card": "custom",
-  "color": "0B1210"
+  "card": "custom"
 }
