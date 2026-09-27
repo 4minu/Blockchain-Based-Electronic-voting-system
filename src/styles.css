@@ -2,92 +2,52 @@
 @import "tw-animate-css";
 
 @theme {
-  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Fraunces", ui-serif, Georgia, "Times New Roman", serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-
   --color-background: #0b1210;
   --color-foreground: #e6ece8;
-  --color-card: #141c19;
+  --color-card: #121a17;
   --color-card-foreground: #e6ece8;
+  --color-popover: #121a17;
+  --color-popover-foreground: #e6ece8;
   --color-primary: #8fad9a;
   --color-primary-foreground: #0b1210;
-  --color-secondary: #1b2622;
+  --color-secondary: #1a2420;
   --color-secondary-foreground: #e6ece8;
-  --color-muted: #1b2622;
+  --color-muted: #1a2420;
   --color-muted-foreground: #8b9890;
-  --color-accent: #1b2622;
-  --color-accent-foreground: #e6ece8;
-  --color-destructive: #c97a72;
-  --color-destructive-foreground: #0b1210;
+  --color-accent: #c4a574;
+  --color-accent-foreground: #0b1210;
+  --color-destructive: #d9786a;
   --color-border: #24302b;
   --color-input: #24302b;
   --color-ring: #8fad9a;
-  --color-paper: #dfe6e0;
-  --color-ink: #0b1210;
-  --color-ok: #7da88a;
-  --color-warn: #c4a574;
-
-  --radius-xs: 0.25rem;
-  --radius-sm: 0.5rem;
-  --radius-md: 0.75rem;
-  --radius-lg: 1rem;
-  --radius-xl: 1.5rem;
+  --radius: 0.75rem;
+  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Fraunces", Georgia, serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 }
 
 @layer base {
   html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background: var(--color-background);
-    color: var(--color-foreground);
   }
-
   body {
-    min-height: 100dvh;
-    background-color: var(--color-background);
-    background-image: linear-gradient(
-      to right,
-      color-mix(in oklab, var(--color-foreground) 4%, transparent) 1px,
-      transparent 1px
-    );
-    background-size: 5.5rem 5.5rem;
-    background-position: top;
+    background: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
   }
-
-  h1,
-  h2,
-  h3 {
-    font-family: var(--font-display);
+  h1, h2, h3 {
     text-wrap: balance;
-    letter-spacing: -0.025em;
   }
-
   p {
     text-wrap: pretty;
   }
-
   button:not(:disabled),
   [role="button"]:not(:disabled) {
     cursor: pointer;
   }
 }
 
-@layer components {
-  .surface-card {
-    box-shadow: 0 1px 0
-      color-mix(in oklab, var(--color-foreground) 6%, transparent);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+.font-display {
+  font-family: var(--font-display);
 }
