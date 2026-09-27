@@ -10,21 +10,19 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AppRouteImport } from './routes/app'
+import { Route as LedgerRouteImport } from './routes/ledger'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as AppIndexRouteImport } from './routes/app/index'
-import { Route as AppBallotRouteImport } from './routes/app/ballot'
-import { Route as AppLedgerRouteImport } from './routes/app/ledger'
-import { Route as AppResultsRouteImport } from './routes/app/results'
+import { Route as ResultsRouteImport } from './routes/results'
+import { Route as VoteRouteImport } from './routes/vote'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppRoute = AppRouteImport.update({
-  id: '/app',
-  path: '/app',
+const LedgerRoute = LedgerRouteImport.update({
+  id: '/ledger',
+  path: '/ledger',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -32,81 +30,53 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppIndexRoute = AppIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppBallotRoute = AppBallotRouteImport.update({
-  id: '/ballot',
-  path: '/ballot',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppLedgerRoute = AppLedgerRouteImport.update({
-  id: '/ledger',
-  path: '/ledger',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppResultsRoute = AppResultsRouteImport.update({
+const ResultsRoute = ResultsRouteImport.update({
   id: '/results',
   path: '/results',
-  getParentRoute: () => AppRoute,
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VoteRoute = VoteRouteImport.update({
+  id: '/vote',
+  path: '/vote',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/app': typeof AppRouteWithChildren
+  '/ledger': typeof LedgerRoute
   '/login': typeof LoginRoute
-  '/app/ballot': typeof AppBallotRoute
-  '/app/ledger': typeof AppLedgerRoute
-  '/app/results': typeof AppResultsRoute
-  '/app/': typeof AppIndexRoute
+  '/results': typeof ResultsRoute
+  '/vote': typeof VoteRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/ledger': typeof LedgerRoute
   '/login': typeof LoginRoute
-  '/app/ballot': typeof AppBallotRoute
-  '/app/ledger': typeof AppLedgerRoute
-  '/app/results': typeof AppResultsRoute
-  '/app': typeof AppIndexRoute
+  '/results': typeof ResultsRoute
+  '/vote': typeof VoteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/app': typeof AppRouteWithChildren
+  '/ledger': typeof LedgerRoute
   '/login': typeof LoginRoute
-  '/app/ballot': typeof AppBallotRoute
-  '/app/ledger': typeof AppLedgerRoute
-  '/app/results': typeof AppResultsRoute
-  '/app/': typeof AppIndexRoute
+  '/results': typeof ResultsRoute
+  '/vote': typeof VoteRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/app'
-    | '/login'
-    | '/app/ballot'
-    | '/app/ledger'
-    | '/app/results'
-    | '/app/'
+  fullPaths: '/' | '/ledger' | '/login' | '/results' | '/vote'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/app/ballot' | '/app/ledger' | '/app/results' | '/app'
-  id:
-    | '__root__'
-    | '/'
-    | '/app'
-    | '/login'
-    | '/app/ballot'
-    | '/app/ledger'
-    | '/app/results'
-    | '/app/'
+  to: '/' | '/ledger' | '/login' | '/results' | '/vote'
+  id: '__root__' | '/' | '/ledger' | '/login' | '/results' | '/vote'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AppRoute: typeof AppRouteWithChildren
+  LedgerRoute: typeof LedgerRoute
   LoginRoute: typeof LoginRoute
+  ResultsRoute: typeof ResultsRoute
+  VoteRoute: typeof VoteRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -118,11 +88,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/app': {
-      id: '/app'
-      path: '/app'
-      fullPath: '/app'
-      preLoaderRoute: typeof AppRouteImport
+    '/ledger': {
+      id: '/ledger'
+      path: '/ledger'
+      fullPath: '/ledger'
+      preLoaderRoute: typeof LedgerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -132,57 +102,29 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/app/': {
-      id: '/app/'
-      path: '/'
-      fullPath: '/app/'
-      preLoaderRoute: typeof AppIndexRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/ballot': {
-      id: '/app/ballot'
-      path: '/ballot'
-      fullPath: '/app/ballot'
-      preLoaderRoute: typeof AppBallotRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/ledger': {
-      id: '/app/ledger'
-      path: '/ledger'
-      fullPath: '/app/ledger'
-      preLoaderRoute: typeof AppLedgerRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/results': {
-      id: '/app/results'
+    '/results': {
+      id: '/results'
       path: '/results'
-      fullPath: '/app/results'
-      preLoaderRoute: typeof AppResultsRouteImport
-      parentRoute: typeof AppRoute
+      fullPath: '/results'
+      preLoaderRoute: typeof ResultsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vote': {
+      id: '/vote'
+      path: '/vote'
+      fullPath: '/vote'
+      preLoaderRoute: typeof VoteRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
 
-interface AppRouteChildren {
-  AppBallotRoute: typeof AppBallotRoute
-  AppLedgerRoute: typeof AppLedgerRoute
-  AppResultsRoute: typeof AppResultsRoute
-  AppIndexRoute: typeof AppIndexRoute
-}
-
-const AppRouteChildren: AppRouteChildren = {
-  AppBallotRoute: AppBallotRoute,
-  AppLedgerRoute: AppLedgerRoute,
-  AppResultsRoute: AppResultsRoute,
-  AppIndexRoute: AppIndexRoute,
-}
-
-const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AppRoute: AppRouteWithChildren,
+  LedgerRoute: LedgerRoute,
   LoginRoute: LoginRoute,
+  ResultsRoute: ResultsRoute,
+  VoteRoute: VoteRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
