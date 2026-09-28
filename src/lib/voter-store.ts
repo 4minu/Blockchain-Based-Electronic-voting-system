@@ -61,6 +61,7 @@ export const useVoterStore = create<VoterState>((set, get) => ({
       set({ hydrated: true, session: null });
       return;
     }
+    // Restore immediately so the booth never waits on the network.
     set({ session: stored, hydrated: true });
     if (typeof navigator !== "undefined" && !navigator.onLine) return;
     try {
