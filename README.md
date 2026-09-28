@@ -94,3 +94,16 @@ npm run build
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+
+## Install on Android
+
+A sideloadable APK is attached to the [v1.0.0 release](https://github.com/4minu/Blockchain-Based-Electronic-voting-system/releases/tag/v1.0.0).
+
+1. On your phone, open that release and download **SOE-Chainvote.apk**.
+2. Open the file. If Android says the app is from an unknown source, tap **Settings**, allow installs from this source, then **Install**.
+3. Open **SOE Chainvote**.
+4. Sign in with your FUTO student email and registration number (example: `garbaaminu.20211288832@futo.edu.ng` / `20211288832`).
+5. The session stays on the phone. You can mark ballots offline; each ballot is sealed with PBFT (4 nodes, quorum 3).
+
+This is a departmental demo package (debug-signed), not a Play Store build.
