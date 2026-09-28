@@ -5,14 +5,14 @@ on:
     branches: [main]
     paths:
       - "android/**"
-      - "src/lib/class-roll.server.ts"
-      - "src/lib/election-data.ts"
       - ".github/workflows/android.yml"
   workflow_dispatch:
 
 jobs:
   apk:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -21,14 +21,25 @@ jobs:
           java-version: "17"
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
-      - name: Build debug APK
+        with:
+          packages: "platform-tools platforms;android-34 build-tools;34.0.0"
+      - name: Build APK
         working-directory: android
         run: |
           echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
-      - name: Upload APK
+          ./gradlew assembleDebug --no-daemon --info
+      - name: Name the package
+        run: |
+          cp android/app/build/outputs/apk/debug/app-debug.apk SOE-Chainvote.apk
+          ls -lh SOE-Chainvote.apk
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: SOE-Chainvote
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: SOE-Chainvote.apk
+      - name: Attach APK to GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload v1.0.0 SOE-Chainvote.apk --clobber --repo "$GITHUB_REPOSITORY"
