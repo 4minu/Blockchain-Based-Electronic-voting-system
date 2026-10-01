@@ -1,106 +1,48 @@
 # SOE Chainvote
 
-Private **PBFT blockchain** voting for the **Department of Software Engineering**, Federal University of Technology, Owerri — **2025/2026 session**.
+Mobile-first private blockchain voting for the **Software Engineering Departmental Elections**, FUTO — **2025/2026 session**.
 
-Mobile-first departmental booth: sign in once online, stay signed in, vote offline, and sync when the network returns.
+## How it works
 
-## Download the Android APK
+1. **Sign in online** with your FUTO student email and registration number (the class roll).
+2. The session **stays on the device** (30 days). You do not sign in again to vote.
+3. **Vote offline.** Marks are stored on the phone.
+4. When the network returns, queued ballots are **sealed by PBFT** (4 permissioned nodes, f = 1, quorum 3).
 
-**[Download SOE-Chainvote.apk](https://github.com/4minu/Blockchain-Based-Electronic-voting-system/releases/latest/download/SOE-Chainvote.apk)** (~2.6 MB)
+Presidential slate: **Garba Aminu** and **Ugwumba Akachukwu Mac-Anointed**.
 
-Direct file on this repo: [releases/SOE-Chainvote.apk](https://github.com/4minu/Blockchain-Based-Electronic-voting-system/raw/main/releases/SOE-Chainvote.apk)
+## Sign in
 
-1. On your phone, open the APK.
-2. If Android blocks it, allow **Install unknown apps** for the app you used (Chrome / Files / Drive), then **Install**.
-3. Open **Chainvote** and sign in with FUTO email + registration number.
+Use the FUTO email on the class list **or** the Outlook form `firstname.lastname@futo.edu.ng`, plus your registration number. Digits, slashes, or dashes in the reg number all work.
 
-## How to vote
+Examples that all open the same booth for Garba Aminu:
 
-1. **First sign-in needs the internet.** Enter your FUTO student email and registration number (class roll).
-2. The booth **stays signed in on the device** for 30 days.
-3. **Open booth**, pick one candidate per office, **Cast ballot**.
-4. If you have no signal, marks are stored on the phone. When you are back online, four permissioned nodes seal the ballot with **PBFT**.
+- `garbaaminu.20211288832@futo.edu.ng` / `20211288832`
+- `garba.aminu@futo.edu.ng` / `2021/1288832`
+- `garbaaminu` / `20211288832`
 
-Try (eligible roll):
+## Android APK
 
-```
-garbaaminu.20211288832@futo.edu.ng
-20211288832
-```
+The `android/` folder is a WebView wrapper. A debug APK is produced by GitHub Actions on every push (`SOE-Chainvote` artifact) and can be sideloaded:
 
-To demo offline: tap **Go offline**, vote, then **Go online**. You should see **Sealed by BFT**.
+1. Download `SOE-Chainvote.apk` from the latest Actions run (or Releases).
+2. On the phone: Settings → Security → allow install from this source.
+3. Open the APK. The launcher uses the Software Engineering seal.
+4. Sign in once while online. After that the booth stays signed in for offline voting.
 
-## 2025/2026 offices
-
-| Office | Candidates |
-| --- | --- |
-| Departmental President | Garba Aminu, Ugwumba Akachukwu Mac-Anointed |
-| Vice President | Zainab Abdullahi, Ibrahim Musa |
-| General Secretary | Kelvin Okeke, Ngozi Eze |
-| Financial Secretary | Fatima Bello, David Nwosu |
-| Public Relations Officer | Aisha Mohammed, Emeka Okafor |
-| Welfare Director | Blessing Chukwu, Yusuf Lawal |
-| Academic Director | Sophia Nnamdi, Patrick Obi |
-
-One ballot per student. The chain and tally stay public. Names and registration numbers never appear on the ledger — only `SHA-256(salt | email | reg number)` commitments.
-
-## Decentralization (private BFT chain)
-
-This is a **permissioned private blockchain**, not Bitcoin or Ethereum. Four independent validators share one hash-linked ledger:
-
-| Node | Role |
-| --- | --- |
-| Commission | election authority |
-| Faculty | departmental oversight |
-| Senate | institutional check |
-| Audit | independent witness |
-
-**PBFT, f = 1, quorum 3 of 4.** A block is not canonical until three nodes sign **prepare** and **commit**. One faulty node cannot rewrite history.
-
-Each block carries:
-
-- `previousHash` — tamper-evident chain
-- Merkle root over the vote transactions
-- SHA-256 block hash
-- BFT certificate (prepare + commit signatures)
-
-Inspect any block on **Chain**.
-
-## Offline design
-
-```
-Internet required  →  class-roll login  →  session on device (30 days)
-                                              ↓
-                                    vote with or without signal
-                                              ↓
-                         offline: marks queued on the phone
-                                              ↓
-                         online again: PBFT seals the block
+```bash
+cd android
+./gradlew assembleDebug
+# output: app/build/outputs/apk/debug/app-debug.apk
 ```
 
-Login is the only step that needs the network, because the class roll lives on the validators. After that, the session, the slate, and pending ballots live on the phone.
-
-## Stack
-
-- React 19, TanStack Start / Router
-- Tailwind v4
-- Postgres (or embedded PGLite in local preview)
-- Permissioned hash-chain + PBFT validators (application-level blockchain)
-
-## Run locally
+## Run the web booth
 
 ```bash
 npm install
 npm run dev
 ```
 
-Requires Node 22. Set `DATABASE_URL` to a Postgres connection string for a durable store. Without it, the app uses in-memory Postgres (PGLite).
+## Licence
 
-```bash
-npm run typecheck
-npm run build
-```
-
-## License
-
-MIT — see [LICENSE](LICENSE).
+See [LICENSE](LICENSE).

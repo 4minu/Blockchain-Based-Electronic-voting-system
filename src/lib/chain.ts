@@ -144,3 +144,4 @@ export async function attestBlock(blockHash: string): Promise<BftCertificate> {
     commits,
   };
 }
+

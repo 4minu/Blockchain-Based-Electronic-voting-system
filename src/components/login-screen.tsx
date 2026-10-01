@@ -102,7 +102,10 @@ export function LoginScreen() {
           Sign in to the 2025/2026 booth.
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-          First sign-in needs the internet. After that this phone stays signed in, so you can mark a ballot offline and sync when you are back.
+          First sign-in needs the internet. Use the FUTO email on the class list
+          (Outlook / firstname.lastname@futo.edu.ng is fine) and your registration
+          number. After that this phone stays signed in, so you can mark a ballot
+          offline and sync when you are back.
         </p>
 
         {!networkOnline && (
@@ -119,10 +122,13 @@ export function LoginScreen() {
             <Label htmlFor="email">FUTO student email</Label>
             <Input
               id="email"
-              type="email"
+              type="text"
               autoComplete="username"
               inputMode="email"
-              placeholder="you.reg@futo.edu.ng"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              placeholder="firstname.lastname@futo.edu.ng"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required

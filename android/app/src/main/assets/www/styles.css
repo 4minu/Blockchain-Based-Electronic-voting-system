@@ -20,7 +20,7 @@ button, input { font: inherit; }
 a { color: var(--sage); }
 .app { max-width: 28rem; margin: 0 auto; min-height: 100dvh; padding: 1.5rem 1.25rem calc(5.5rem + var(--pad)); }
 .row { display: flex; align-items: center; gap: 0.75rem; }
-.seal { width: 48px; height: 48px; border-radius: 12px; }
+.seal { width: 48px; height: 48px; border-radius: 999px; object-fit: cover; background: #0b1210; border: 1px solid var(--line); }
 .kicker { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--sage); margin: 0; }
 .brand { font-size: 1.35rem; margin: 0; }
 h1 { font-size: 2.1rem; line-height: 1.15; margin: 2.2rem 0 0.75rem; }

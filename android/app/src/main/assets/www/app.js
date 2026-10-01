@@ -15,8 +15,8 @@ const KEYS = {
 const $app = document.getElementById("app");
 const state = {
   route: "home",
-  roll: [],
-  slate: null,
+  roll: Array.isArray(window.SOE_ROLL) ? window.SOE_ROLL : [],
+  slate: window.SOE_SLATE || null,
   session: null,
   chain: [],
   voted: [],
@@ -25,6 +25,86 @@ const state = {
   error: "",
   busy: false,
 };
+
+function stripInvisible(raw) {
+  return String(raw || "").replace(/[\u200b-\u200d\ufeff\u00a0]/g, "").trim();
+}
+
+function normalizeEmail(raw) {
+  let e = stripInvisible(raw).toLowerCase().replace(/\s+/g, "");
+  if (!e) return e;
+  if (!e.includes("@")) e = e + "@futo.edu.ng";
+  return e;
+}
+
+function normalizeReg(raw) {
+  return stripInvisible(raw).replace(/\D/g, "");
+}
+
+function lettersOnly(s) {
+  return String(s).toLowerCase().replace(/[^a-z]/g, "");
+}
+
+function tokens(s) {
+  return String(s)
+    .toLowerCase()
+    .split(/[^a-z]+/)
+    .filter(function (t) {
+      return t.length >= 2;
+    });
+}
+
+function emailFitsRoll(email, row) {
+  const e = normalizeEmail(email);
+  const parts = e.split("@");
+  const local = parts[0] || "";
+  const domain = parts[1] || "";
+  if (!local) return false;
+  if (domain && domain !== "futo.edu.ng") return false;
+  const rollLocal = (row.email.split("@")[0] || "").toLowerCase();
+  if (e === row.email.toLowerCase()) return true;
+  if (local === rollLocal) return true;
+  if (local === row.pin) return true;
+  const pinRe = new RegExp(row.pin, "g");
+  const localNoPin = local.replace(pinRe, "").replace(/^[._-]+|[._-]+$/g, "");
+  const rollNoPin = rollLocal.replace(pinRe, "").replace(/^[._-]+|[._-]+$/g, "");
+  const localLetters = lettersOnly(localNoPin);
+  const nameLetters = lettersOnly(row.name || "");
+  const rollLetters = lettersOnly(rollNoPin);
+  if (localLetters && (localLetters === nameLetters || localLetters === rollLetters)) return true;
+  if (localLetters.length >= 5 && (nameLetters.indexOf(localLetters) !== -1 || rollLetters.indexOf(localLetters) !== -1)) {
+    return true;
+  }
+  if (rollLetters.length >= 5 && localLetters.indexOf(rollLetters) !== -1) return true;
+  const nameToks = tokens(row.name || "");
+  const emailToks = tokens(localNoPin);
+  if (
+    emailToks.length &&
+    emailToks.every(function (t) {
+      return nameToks.some(function (n) {
+        return n === t || n.indexOf(t) !== -1 || t.indexOf(n) !== -1;
+      });
+    })
+  ) {
+    return true;
+  }
+  return false;
+}
+
+function findOnRoll(email, pin) {
+  const p = normalizeReg(pin);
+  if (p.length < 8) return null;
+  const byPin = state.roll.filter(function (r) {
+    return r.pin === p;
+  });
+  if (byPin.length === 1 && emailFitsRoll(email, byPin[0])) return byPin[0];
+  const e = normalizeEmail(email);
+  return (
+    state.roll.find(function (r) {
+      return r.email.toLowerCase() === e && r.pin === p;
+    }) || null
+  );
+}
 
 async function sha256Hex(input) {
   const bytes = new TextEncoder().encode(input);
@@ -136,11 +216,11 @@ function loginView() {
         </div>
       </div>
       <h1>Sign in to the 2025/2026 booth.</h1>
-      <p>Internet is only required if this device has never signed in. After that the session stays on the phone so you can vote offline.</p>
+      <p>Use your FUTO student email (Outlook / firstname.lastname is fine) and your registration number. Internet is only required the first time this phone signs in.</p>
       <form class="stack" id="login-form">
         <div>
           <label for="email">FUTO student email</label>
-          <input id="email" type="email" inputmode="email" autocomplete="username" placeholder="you.reg@futo.edu.ng" required />
+          <input id="email" type="text" inputmode="email" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="firstname.lastname@futo.edu.ng" required />
         </div>
         <div>
           <label for="reg">Registration number</label>
@@ -300,17 +380,29 @@ async function onLogin(event) {
   state.error = "";
   state.busy = true;
   render();
-  const email = document.getElementById("email").value.trim().toLowerCase();
-  const pin = document.getElementById("reg").value.trim();
-  const hit = state.roll.find((r) => r.email === email && r.pin === pin);
+  const email = document.getElementById("email").value;
+  const pin = document.getElementById("reg").value;
+  const hit = findOnRoll(email, pin);
   if (!hit) {
     state.busy = false;
-    state.error = "This FUTO email and registration number are not on the eligible roll.";
+    state.error =
+      state.roll.length === 0
+        ? "The class roll did not load on this phone. Reinstall the app."
+        : "This FUTO email and registration number are not on the eligible roll. Use your Outlook address or firstname.lastname@futo.edu.ng and digits-only reg number.";
     render();
+    const emailEl = document.getElementById("email");
+    const regEl = document.getElementById("reg");
+    if (emailEl) emailEl.value = email;
+    if (regEl) regEl.value = pin;
     return;
   }
-  const commitment = await voterCommitment(email, pin);
-  state.session = { email, commitment, maskedEmail: maskEmail(email), signedInAt: Date.now() };
+  const commitment = await voterCommitment(hit.email, hit.pin);
+  state.session = {
+    email: hit.email,
+    commitment,
+    maskedEmail: maskEmail(hit.email),
+    signedInAt: Date.now(),
+  };
   state.busy = false;
   persist();
   go("home");
@@ -339,12 +431,8 @@ async function onCast() {
 }
 
 async function boot() {
-  const [roll, slate] = await Promise.all([
-    fetch("./roll.json").then((r) => r.json()),
-    fetch("./slate.json").then((r) => r.json()),
-  ]);
-  state.roll = roll;
-  state.slate = slate;
+  if (!state.roll.length && Array.isArray(window.SOE_ROLL)) state.roll = window.SOE_ROLL;
+  if (!state.slate && window.SOE_SLATE) state.slate = window.SOE_SLATE;
   loadLocal();
   if (!state.chain.length) {
     const genesis = await sealBlock(GENESIS, [], 0);

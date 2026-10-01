@@ -4,8 +4,8 @@ import { getSql } from "@/lib/db";
 import type { ElectionStatus } from "@/lib/election-types";
 
 const credentialsSchema = z.object({
-  email: z.string().trim().min(6).max(160),
-  regNumber: z.string().trim().min(8).max(16),
+  email: z.string().trim().min(3).max(160),
+  regNumber: z.string().trim().min(8).max(24),
 });
 
 async function seed() {

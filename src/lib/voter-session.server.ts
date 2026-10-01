@@ -1,6 +1,7 @@
 import { sha256Hex, voterCommitment } from "@/lib/chain";
 import { getSql } from "@/lib/db";
 import type { ElectionStatus } from "@/lib/election-types";
+import { findOnRoll, normalizeEmail, normalizeReg } from "@/lib/roll-match";
 
 export type RollMatch = { studentId: string; pin: string; commitment: string };
 
@@ -40,24 +41,11 @@ export function maskEmail(email: string) {
   return `${local.slice(0, 2)}***${local.slice(-2)}@${domain}`;
 }
 
-export function normalizeEmail(raw: string) {
-  const e = raw.trim().toLowerCase();
-  if (!e) return e;
-  if (!e.includes("@")) return `${e}@futo.edu.ng`;
-  return e;
-}
-
-export function normalizeReg(raw: string) {
-  return raw.trim().replace(/[\s\-/]/g, "");
-}
+export { normalizeEmail, normalizeReg };
 
 export async function matchRoll(email: string, pin: string): Promise<RollMatch | null> {
   const { CLASS_ROLL } = await import("./class-roll.server");
-  const e = normalizeEmail(email);
-  const p = normalizeReg(pin);
-  const row = CLASS_ROLL.find(
-    (r) => r.studentId.toLowerCase() === e && r.pin === p,
-  );
+  const row = findOnRoll(CLASS_ROLL, email, pin);
   if (!row) return null;
   const commitment = await voterCommitment(row.studentId, row.pin);
   return { studentId: row.studentId, pin: row.pin, commitment };
