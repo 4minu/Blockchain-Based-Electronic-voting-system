@@ -93,12 +93,12 @@ function emailFitsRoll(email, row) {
 
 function findOnRoll(email, pin) {
   const p = normalizeReg(pin);
-  if (p.length < 8) return null;
+  const e = normalizeEmail(email);
+  if (p.length < 8 || !e) return null;
   const byPin = state.roll.filter(function (r) {
     return r.pin === p;
   });
-  if (byPin.length === 1 && emailFitsRoll(email, byPin[0])) return byPin[0];
-  const e = normalizeEmail(email);
+  if (byPin.length === 1) return byPin[0];
   return (
     state.roll.find(function (r) {
       return r.email.toLowerCase() === e && r.pin === p;
@@ -216,11 +216,11 @@ function loginView() {
         </div>
       </div>
       <h1>Sign in to the 2025/2026 booth.</h1>
-      <p>Use your FUTO student email (Outlook / firstname.lastname is fine) and your registration number. Internet is only required the first time this phone signs in.</p>
+      <p>Anyone on the 2025/2026 class list (88 students) can sign in with their registration number plus FUTO email or full name. Internet is only required the first time this phone signs in.</p>
       <form class="stack" id="login-form">
         <div>
-          <label for="email">FUTO student email</label>
-          <input id="email" type="text" inputmode="email" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="firstname.lastname@futo.edu.ng" required />
+          <label for="email">FUTO email or student name</label>
+          <input id="email" type="text" inputmode="text" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Garba Aminu or you@futo.edu.ng" required />
         </div>
         <div>
           <label for="reg">Registration number</label>
@@ -388,7 +388,7 @@ async function onLogin(event) {
     state.error =
       state.roll.length === 0
         ? "The class roll did not load on this phone. Reinstall the app."
-        : "This FUTO email and registration number are not on the eligible roll. Use your Outlook address or firstname.lastname@futo.edu.ng and digits-only reg number.";
+        : "This registration number is not on the 2025/2026 Software Engineering class list.";
     render();
     const emailEl = document.getElementById("email");
     const regEl = document.getElementById("reg");

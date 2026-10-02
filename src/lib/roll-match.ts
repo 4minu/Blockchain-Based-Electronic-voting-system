@@ -64,11 +64,18 @@ export function emailFitsRoll(email: string, row: RollRow): boolean {
   return false;
 }
 
+/**
+ * A student is eligible iff their registration number is uniquely on the
+ * class list. The email field must be filled; it does not have to match the
+ * spreadsheet spelling (Outlook vs name.reg, blank cells, missing @futo).
+ */
 export function findOnRoll(rows: RollRow[], email: string, pin: string): RollRow | null {
   const p = normalizeReg(pin);
-  if (p.length < 8) return null;
-  const byPin = rows.filter((r) => r.pin === p);
-  if (byPin.length === 1 && emailFitsRoll(email, byPin[0]!)) return byPin[0]!;
   const e = normalizeEmail(email);
+  if (p.length < 8 || !e) return null;
+
+  const byPin = rows.filter((r) => r.pin === p);
+  if (byPin.length === 1) return byPin[0]!;
+
   return rows.find((r) => r.studentId.toLowerCase() === e && r.pin === p) ?? null;
 }

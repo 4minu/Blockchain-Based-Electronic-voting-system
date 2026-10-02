@@ -91,7 +91,7 @@ export const CLASS_ROLL: RollCredential[] = [
   { name: "Ukeje Marcel Chibundu", studentId: "ukejemarcel.20211269952@futo.edu.ng", pin: "20211269952" },
   { name: "Ukwuoma Chiemerie Gerald", studentId: "ukwuomachiemerie.20211277622@futo.edu.ng", pin: "20211277622" },
   { name: "Uo-fredrick Nkem Fortune", studentId: "uo-fredrickfortune.20211266632@futo.edu.ng", pin: "20211266632" },
-];
+]
 
 const PRESIDENT_PINS = new Set(["20211288832", "20223360512"]);
 

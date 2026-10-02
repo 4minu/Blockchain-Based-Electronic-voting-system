@@ -4,7 +4,7 @@ import { getSql } from "@/lib/db";
 import type { ElectionStatus } from "@/lib/election-types";
 
 const credentialsSchema = z.object({
-  email: z.string().trim().min(3).max(160),
+  email: z.string().trim().min(1).max(160),
   regNumber: z.string().trim().min(8).max(24),
 });
 
@@ -25,7 +25,7 @@ export const signInVoter = createServerFn({ method: "POST" })
       return {
         ok: false as const,
         message:
-          "This FUTO email and registration number are not on the eligible roll.",
+          "This registration number is not on the 2025/2026 Software Engineering class list.",
       };
     }
     const booth = await openBoothSession(match);
