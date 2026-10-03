@@ -47,6 +47,14 @@ function lettersOnly(s) {
   return String(s).toLowerCase().replace(/[^a-z]/g, "");
 }
 
+function attr(value) {
+  const amp = String.fromCharCode(38);
+  return String(value || "")
+    .replace(/&/g, amp + "amp;")
+    .replace(/"/g, amp + "quot;")
+    .replace(/</g, amp + "lt;");
+}
+
 function tokens(s) {
   return String(s)
     .toLowerCase()
@@ -111,8 +119,86 @@ function findOnRoll(email, pin) {
 
 async function sha256Hex(input) {
   const bytes = new TextEncoder().encode(input);
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
-  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+  if (globalThis.crypto && crypto.subtle && crypto.subtle.digest) {
+    try {
+      const digest = await crypto.subtle.digest("SHA-256", bytes);
+      return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+    } catch (err) {
+      /* file:// WebViews often block SubtleCrypto — fall through */
+    }
+  }
+  return sha256HexSync(String(input));
+}
+
+function sha256HexSync(ascii) {
+  function rightRotate(value, amount) {
+    return (value >>> amount) | (value << (32 - amount));
+  }
+  const mathPow = Math.pow;
+  const maxWord = mathPow(2, 32);
+  const lengthProperty = "length";
+  let i, j;
+  const result = [];
+  const words = [];
+  const asciiBitLength = ascii[lengthProperty] * 8;
+  let hash = (sha256HexSync.h = sha256HexSync.h || []);
+  const k = (sha256HexSync.k = sha256HexSync.k || []);
+  let primeCounter = k[lengthProperty];
+  const isComposite = {};
+  for (let candidate = 2; primeCounter < 64; candidate++) {
+    if (!isComposite[candidate]) {
+      for (i = 0; i < 313; i += candidate) isComposite[i] = candidate;
+      hash[primeCounter] = (mathPow(candidate, 0.5) * maxWord) | 0;
+      k[primeCounter++] = (mathPow(candidate, 1 / 3) * maxWord) | 0;
+    }
+  }
+  ascii += "\x80";
+  while ((ascii[lengthProperty] % 64) - 56) ascii += "\x00";
+  for (i = 0; i < ascii[lengthProperty]; i++) {
+    j = ascii.charCodeAt(i);
+    if (j >> 8) return "";
+    words[i >> 2] |= j << (((3 - i) % 4) * 8);
+  }
+  words[words[lengthProperty]] = (asciiBitLength / maxWord) | 0;
+  words[words[lengthProperty]] = asciiBitLength;
+  for (j = 0; j < words[lengthProperty]; ) {
+    const w = words.slice(j, (j += 16));
+    const oldHash = hash;
+    hash = hash.slice(0, 8);
+    for (i = 0; i < 64; i++) {
+      const w15 = w[i - 15];
+      const w2 = w[i - 2];
+      const a = hash[0];
+      const e = hash[4];
+      const temp1 =
+        hash[7] +
+        (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25)) +
+        ((e & hash[5]) ^ (~e & hash[6])) +
+        k[i] +
+        (w[i] =
+          i < 16
+            ? w[i]
+            : (w[i - 16] +
+                (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3)) +
+                w[i - 7] +
+                (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))) |
+              0);
+      const temp2 =
+        (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22)) +
+        ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
+      hash = [(temp1 + temp2) | 0].concat(hash);
+      hash[4] = (hash[4] + temp1) | 0;
+      hash.pop();
+    }
+    for (i = 0; i < 8; i++) hash[i] = (hash[i] + oldHash[i]) | 0;
+  }
+  for (i = 0; i < 8; i++) {
+    for (j = 3; j + 1; j--) {
+      const b = (hash[i] >> (j * 8)) & 255;
+      result.push((b < 16 ? "0" : "") + b.toString(16));
+    }
+  }
+  return result.join("");
 }
 
 async function voterCommitment(email, pin) {
@@ -219,15 +305,15 @@ function loginView() {
         </div>
       </div>
       <h1>Sign in to the 2025/2026 booth.</h1>
-      <p>Anyone on the 2025/2026 class list (88 students) can sign in with their registration number plus FUTO email or full name. Internet is only required the first time this phone signs in.</p>
+      <p>Anyone on the 2025/2026 class list (88 students) can sign in with their registration number plus FUTO email or full name. This booth runs on the phone — no remote server is required to open a session or seal a ballot.</p>
       <form class="stack" id="login-form">
         <div>
           <label for="email">FUTO email or student name</label>
-          <input id="email" type="text" inputmode="text" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Garba Aminu or you@futo.edu.ng" value="${state.identityEmail.replace(/"/g, """)}" required />
+          <input id="email" type="text" inputmode="text" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Garba Aminu or you@futo.edu.ng" value="${attr(state.identityEmail)}" required />
         </div>
         <div>
           <label for="reg">Registration number</label>
-          <input id="reg" inputmode="numeric" autocomplete="off" placeholder="e.g. 20211288832" value="${state.identityPin.replace(/"/g, """)}" required />
+          <input id="reg" inputmode="numeric" autocomplete="off" placeholder="e.g. 20211288832" value="${attr(state.identityPin)}" required />
         </div>
         ${state.error ? `<p class="alert" role="alert">${state.error}</p>` : ""}
         <button class="btn" ${state.busy ? "disabled" : ""}>${state.busy ? "Checking the roll…" : "Sign in"}</button>
@@ -434,14 +520,18 @@ async function onCast() {
 }
 
 async function boot() {
-  if (!state.roll.length && Array.isArray(window.SOE_ROLL)) state.roll = window.SOE_ROLL;
-  if (!state.slate && window.SOE_SLATE) state.slate = window.SOE_SLATE;
-  loadLocal();
-  if (!state.chain.length) {
-    const genesis = await sealBlock(GENESIS, [], 0);
-    genesis.transactions = [];
-    state.chain = [genesis];
-    persist();
+  try {
+    if (!state.roll.length && Array.isArray(window.SOE_ROLL)) state.roll = window.SOE_ROLL;
+    if (!state.slate && window.SOE_SLATE) state.slate = window.SOE_SLATE;
+    loadLocal();
+    if (!state.chain.length) {
+      const genesis = await sealBlock(GENESIS, [], 0);
+      genesis.transactions = [];
+      state.chain = [genesis];
+      persist();
+    }
+  } catch (err) {
+    state.error = "Booth engine failed to start. Reinstall SOE Chainvote 1.3.0.";
   }
   render();
 }

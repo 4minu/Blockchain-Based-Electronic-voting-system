@@ -6,15 +6,14 @@ import android.os.Bundle;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.webkit.WebViewAssetLoader;
-import androidx.webkit.WebViewClientCompat;
 
 /**
  * Native shell for SOE Chainvote.
  *
- * The booth UI lives in assets/www and is served over a virtual HTTPS origin
- * so localStorage (session + offline ballots) survives app restarts.
+ * The booth is a self-contained page in assets/www. It does not call a
+ * remote server — login, ballots and the BFT hash chain all run on device.
  */
 public class MainActivity extends AppCompatActivity {
     private WebView webView;
@@ -29,24 +28,14 @@ public class MainActivity extends AppCompatActivity {
         webView.setBackgroundColor(Color.parseColor("#0B1210"));
         setContentView(webView);
 
-        final WebViewAssetLoader assetLoader = new WebViewAssetLoader.Builder()
-                .addPathHandler("/assets/", new WebViewAssetLoader.AssetsPathHandler(this))
-                .build();
-
-        webView.setWebViewClient(new WebViewClientCompat() {
-            @Override
-            public android.webkit.WebResourceResponse shouldInterceptRequest(
-                    WebView view, android.webkit.WebResourceRequest request) {
-                return assetLoader.shouldInterceptRequest(request.getUrl());
-            }
-        });
+        webView.setWebViewClient(new WebViewClient());
         webView.setWebChromeClient(new WebChromeClient());
 
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
         settings.setDatabaseEnabled(true);
-        settings.setCacheMode(WebSettings.LOAD_DEFAULT);
+        settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
         settings.setAllowFileAccess(true);
         settings.setAllowContentAccess(true);
         settings.setUseWideViewPort(true);
@@ -54,12 +43,12 @@ public class MainActivity extends AppCompatActivity {
         settings.setBuiltInZoomControls(false);
         settings.setDisplayZoomControls(false);
         settings.setSupportZoom(false);
-        settings.setUserAgentString(settings.getUserAgentString() + " SOEChainvote/1.0");
+        settings.setUserAgentString(settings.getUserAgentString() + " SOEChainvote/1.3");
 
         if (savedInstanceState != null) {
             webView.restoreState(savedInstanceState);
         } else {
-            webView.loadUrl("https://appassets.androidplatform.net/assets/www/index.html");
+            webView.loadUrl("file:///android_asset/www/index.html");
         }
     }
 
