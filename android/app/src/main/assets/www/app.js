@@ -24,6 +24,8 @@ const state = {
   office: "president",
   error: "",
   busy: false,
+  identityEmail: "",
+  identityPin: "",
 };
 
 function stripInvisible(raw) {
@@ -93,15 +95,16 @@ function emailFitsRoll(email, row) {
 
 function findOnRoll(email, pin) {
   const p = normalizeReg(pin);
-  const e = normalizeEmail(email);
-  if (p.length < 8 || !e) return null;
+  if (p.length < 8) return null;
   const byPin = state.roll.filter(function (r) {
     return r.pin === p;
   });
   if (byPin.length === 1) return byPin[0];
+  if (!byPin.length) return null;
+  const e = normalizeEmail(email);
   return (
-    state.roll.find(function (r) {
-      return r.email.toLowerCase() === e && r.pin === p;
+    byPin.find(function (r) {
+      return r.email.toLowerCase() === e;
     }) || null
   );
 }
@@ -220,11 +223,11 @@ function loginView() {
       <form class="stack" id="login-form">
         <div>
           <label for="email">FUTO email or student name</label>
-          <input id="email" type="text" inputmode="text" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Garba Aminu or you@futo.edu.ng" required />
+          <input id="email" type="text" inputmode="text" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Garba Aminu or you@futo.edu.ng" value="${state.identityEmail.replace(/"/g, """)}" required />
         </div>
         <div>
           <label for="reg">Registration number</label>
-          <input id="reg" inputmode="numeric" autocomplete="off" placeholder="e.g. 20211288832" required />
+          <input id="reg" inputmode="numeric" autocomplete="off" placeholder="e.g. 20211288832" value="${state.identityPin.replace(/"/g, """)}" required />
         </div>
         ${state.error ? `<p class="alert" role="alert">${state.error}</p>` : ""}
         <button class="btn" ${state.busy ? "disabled" : ""}>${state.busy ? "Checking the roll…" : "Sign in"}</button>
@@ -377,23 +380,23 @@ function render() {
 
 async function onLogin(event) {
   event.preventDefault();
+  const emailEl = document.getElementById("email");
+  const regEl = document.getElementById("reg");
+  const email = emailEl ? emailEl.value : state.identityEmail;
+  const pin = regEl ? regEl.value : state.identityPin;
+  state.identityEmail = email;
+  state.identityPin = pin;
   state.error = "";
   state.busy = true;
   render();
-  const email = document.getElementById("email").value;
-  const pin = document.getElementById("reg").value;
   const hit = findOnRoll(email, pin);
   if (!hit) {
     state.busy = false;
     state.error =
       state.roll.length === 0
-        ? "The class roll did not load on this phone. Reinstall the app."
+        ? "The class roll did not load on this phone. Uninstall SOE Chainvote and install 1.2.2."
         : "This registration number is not on the 2025/2026 Software Engineering class list.";
     render();
-    const emailEl = document.getElementById("email");
-    const regEl = document.getElementById("reg");
-    if (emailEl) emailEl.value = email;
-    if (regEl) regEl.value = pin;
     return;
   }
   const commitment = await voterCommitment(hit.email, hit.pin);
