@@ -63,6 +63,7 @@ export const useVoterStore = create<VoterState>((set, get) => ({
     }
     // Restore immediately so the booth never waits on the network.
     set({ session: stored, hydrated: true });
+    if (stored.token.startsWith("local-")) return;
     if (typeof navigator !== "undefined" && !navigator.onLine) return;
     try {
       const live = await Promise.race([

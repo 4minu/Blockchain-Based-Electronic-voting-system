@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b1210" />
+    <meta name="description" content="SOE Chainvote — FUTO Software Engineering 2025/2026 departmental election booth." />
+    <title>SOE Chainvote</title>
+    <link rel="icon" href="/soe-seal.png" />
+    <style>
+:root {
+  --bg: #0b1210;
+  --fg: #e6ece8;
+  --card: #121a17;
+  --muted: #8b9890;
+  --sage: #8fad9a;
+  --gold: #c4a574;
+  --line: #24302b;
+  --danger: #d9786a;
+  --pad: env(safe-area-inset-bottom, 0px);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--fg); }
+body {
+  font-family: ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, .display { font-family: Georgia, "Times New Roman", serif; }
+button, input { font: inherit; }
+a { color: var(--sage); }
+.app { max-width: 28rem; margin: 0 auto; min-height: 100dvh; padding: 1.5rem 1.25rem calc(5.5rem + var(--pad)); }
+.row { display: flex; align-items: center; gap: 0.75rem; }
+.seal { width: 48px; height: 48px; border-radius: 999px; object-fit: cover; background: #0b1210; border: 1px solid var(--line); }
+.kicker { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--sage); margin: 0; }
+.brand { font-size: 1.35rem; margin: 0; }
+h1 { font-size: 2.1rem; line-height: 1.15; margin: 2.2rem 0 0.75rem; }
+p { color: var(--muted); line-height: 1.5; }
+label { display: block; font-size: 0.85rem; margin-bottom: 0.4rem; }
+input {
+  width: 100%; height: 48px; border-radius: 12px; border: 1px solid var(--line);
+  background: var(--card); color: var(--fg); padding: 0 0.9rem;
+}
+.stack { display: grid; gap: 1.1rem; margin-top: 1.6rem; }
+.btn {
+  height: 48px; border: 0; border-radius: 12px; background: var(--sage); color: var(--bg);
+  font-weight: 600; width: 100%;
+}
+.btn:disabled { opacity: 0.5; }
+.btn-ghost { background: var(--card); color: var(--fg); border: 1px solid var(--line); }
+.alert { color: var(--danger); font-size: 0.9rem; }
+.note { display: flex; gap: 0.5rem; font-size: 0.75rem; color: var(--muted); margin-top: 2.5rem; }
+.card {
+  background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 1rem;
+}
+.stat { font-size: 1.6rem; font-family: Georgia, serif; color: var(--gold); margin: 0; }
+.nav {
+  position: fixed; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(4, 1fr);
+  background: #0e1613; border-top: 1px solid var(--line); padding-bottom: var(--pad);
+}
+.nav button {
+  background: none; border: 0; color: var(--muted); padding: 0.7rem 0.3rem 0.85rem; font-size: 0.7rem;
+}
+.nav button.active { color: var(--sage); }
+.choice {
+  display: block; width: 100%; text-align: left; background: var(--card); color: var(--fg);
+  border: 1px solid var(--line); border-radius: 14px; padding: 0.9rem 1rem; margin: 0.6rem 0;
+}
+.choice.selected { border-color: var(--gold); }
+.choice strong { display: block; }
+.choice span { color: var(--muted); font-size: 0.8rem; }
+.mono { font-family: ui-monospace, Menlo, monospace; font-size: 0.72rem; word-break: break-all; color: var(--sage); }
+.badge { font-size: 0.7rem; color: var(--gold); letter-spacing: 0.08em; text-transform: uppercase; }
+.hash { font-family: ui-monospace, Menlo, monospace; font-size: 0.7rem; color: var(--muted); word-break: break-all; }
+.tally { display: flex; justify-content: space-between; gap: 1rem; padding: 0.45rem 0; border-bottom: 1px solid var(--line); }
+.offline { border: 1px solid var(--line); background: #1a2420; border-radius: 12px; padding: 0.8rem; font-size: 0.85rem; }
+
+    </style>
+  </head>
+  <body>
+    <div id="app"><p class="kicker" style="padding:2rem">Opening the 2025/2026 booth…</p></div>
+    <script>
+window.SOE_ROLL = [{"name": "Abudei Ogochukwu Imelda", "email": "abudeiogochukwu.20211279562@futo.edu.ng", "pin": "20211279562"}, {"name": "Ajawara Chimaobi Innocent", "email": "ajawarachimaobi.20211282082@futo.edu.ng", "pin": "20211282082"}, {"name": "Akobundu David Nkemdi", "email": "akobundudavid.20211296662@futo.edu.ng", "pin": "20211296662"}, {"name": "Alajemba Paul Uzochukwu", "email": "alajembapaul.20211261512@futo.edu.ng", "pin": "20211261512"}, {"name": "Alugbue Kennedy Obinna", "email": "alugbueobinna.20211261012@futo.edu.ng", "pin": "20211261012"}, {"name": "Anumudu Udochukwu Samuel", "email": "anumudusamuel.20211259202@futo.edu.ng", "pin": "20211259202"}, {"name": "Augustine Wisdom Chinonso", "email": "augustinewisdom.20211297012@futo.edu.ng", "pin": "20211297012"}, {"name": "Chidi-Azuwike Shalom Ebere", "email": "chidi-azuwikeshalom.20211280502@futo.edu.ng", "pin": "20211280502"}, {"name": "Chinedu Abraham Obinna", "email": "chineduabraham.20201240342@futo.edu.ng", "pin": "20201240342"}, {"name": "Christopher Victory", "email": "christophervictory.20211277802@futo.edu.ng", "pin": "20211277802"}, {"name": "Chukwudifu Ifeanyichukwu Golden", "email": "chukwudifugolden.20211258722@futo.edu.ng", "pin": "20211258722"}, {"name": "Chukwuemeka Nwele Nicholas", "email": "chukwuemekanicholas.20211267812@futo.edu.ng", "pin": "20211267812"}, {"name": "Chukwuemeka-ogu Chinalurum Michael", "email": "chukwuemekachinalurum.20211264302@futo.edu.ng", "pin": "20211264302"}, {"name": "Chukwuka Chidubem Emmanuel", "email": "chukwukachidubem.20222333192@futo.edu.ng", "pin": "20222333192"}, {"name": "Ehonor Eronmosele Joshua", "email": "ehonorjoshua.20211264712@futo.edu.ng", "pin": "20211264712"}, {"name": "Ejimakor Prince Ifeanyichukwu", "email": "ejimakorprince.20211257692@futo.edu.ng", "pin": "20211257692"}, {"name": "Eke Queen-Elizabeth Ikwunma", "email": "ekequeen-elizabeth.20201205962@futo.edu.ng", "pin": "20201205962"}, {"name": "Emuchay Ihechiluru Excellence", "email": "emuchayexcellence.20211261132@futo.edu.ng", "pin": "20211261132"}, {"name": "Enemuor Chidubem Mmaduka", "email": "enemuorchidubem.20211274812@futo.edu.ng", "pin": "20211274812"}, {"name": "Enyinnia Joseph Chidubem", "email": "enyinniajoseph.20211263432@futo.edu.ng", "pin": "20211263432"}, {"name": "Esomonu Chijioke Emmanuel", "email": "esomonuchijioke.20211270482@futo.edu.ng", "pin": "20211270482"}, {"name": "Eyisi Ugochukwu Charles", "email": "eyisiugochukwu.20211284522@futo.edu.ng", "pin": "20211284522"}, {"name": "Eze Kelechi Kelvin", "email": "ezekelechi.20211285212@futo.edu.ng", "pin": "20211285212"}, {"name": "Ezeh Chibuzor Nwabueze", "email": "ezehchibuzor.20211272292@futo.edu.ng", "pin": "20211272292"}, {"name": "Ezinwa Emmanuel Emeka", "email": "ezinwaemeka.20211264212@futo.edu.ng", "pin": "20211264212"}, {"name": "Garba Aminu", "email": "garbaaminu.20211288832@futo.edu.ng", "pin": "20211288832"}, {"name": "Ibekwe Onyenaezichukwu Victor", "email": "ibekweonyenaezichukwu.20211268652@futo.edu.ng", "pin": "20211268652"}, {"name": "Ibiam Michael Ikechukwu", "email": "ibiamikechukwu.20211277342@futo.edu.ng", "pin": "20211277342"}, {"name": "Ifeanyi-Amogu Shalom Chinazamekpere", "email": "ifeanyi-amogushalom.20211264742@futo.edu.ng", "pin": "20211264742"}, {"name": "Ifeanyichukwu Chibuiken Chukwudubem", "email": "ifeanyichukwuchukwudubem.20211274282@futo.edu.ng", "pin": "20211274282"}, {"name": "Igboko Emmanuel Chigozirim", "email": "igbokoemmanuel.20211276122@futo.edu.ng", "pin": "20211276122"}, {"name": "Ikedionwu Chinwuba Chukwuemeka", "email": "ikedionwuchukwuemeka.20211296622@futo.edu.ng", "pin": "20211296622"}, {"name": "Ikelionwu Christopher Obiora Jnr", "email": "ikelionwuchristopher.20191150662@futo.edu.ng", "pin": "20191150662"}, {"name": "Ikeh-ezeji Pamela Chinaza", "email": "ikeh-ezejichinaza.20211258792@futo.edu.ng", "pin": "20211258792"}, {"name": "Iwuoha Eunan Simdi", "email": "iwuohasimdi.20211258522@futo.edu.ng", "pin": "20211258522"}, {"name": "Iyogwoya Noble David", "email": "iyogwoyanoble.20211268242@futo.edu.ng", "pin": "20211268242"}, {"name": "Joseph Ayo Isaac", "email": "josephisaac.20211296902@futo.edu.ng", "pin": "20211296902"}, {"name": "Joseph Ezinwa Emmanuel", "email": "josephemmanuel.20211274192@futo.edu.ng", "pin": "20211274192"}, {"name": "Justine Franklin", "email": "justinefranklin.20211292912@futo.edu.ng", "pin": "20211292912"}, {"name": "Kevin Chika Ikechukwu", "email": "ikechukwuchika.20191168002@futo.edu.ng", "pin": "20191168002"}, {"name": "Maduafokwa Uchechukwu Divine", "email": "maduafokwauchechukwu.20211258562@futo.edu.ng", "pin": "20211258562"}, {"name": "Mbanefo Chukwuebuka", "email": "mbanefochukwuebuka.20211294382@futo.edu.ng", "pin": "20211294382"}, {"name": "Nduka Mmesoma Kenechi", "email": "ndukammesoma.20211271422@futo.edu.ng", "pin": "20211271422"}, {"name": "Nnoli Temple Chibeze", "email": "nnolitemple.20211260692@futo.edu.ng", "pin": "20211260692"}, {"name": "Nwakanma Dominion Chinonso", "email": "nwakanmadominion.20211274242@futo.edu.ng", "pin": "20211274242"}, {"name": "Nwali Izuchukwu Hosea", "email": "nwaliizuchukwu.20211269652@futo.edu.ng", "pin": "20211269652"}, {"name": "Nwogu Okwuchukwu Kingsley", "email": "nwogukingsley.20211302762@futo.edu.ng", "pin": "20211302762"}, {"name": "Nwokolo Peter Ugochukwu", "email": "nwokolougochukwu.20211272572@futo.edu.ng", "pin": "20211272572"}, {"name": "Nwokoma Onyedikachukwu Emmanuel", "email": "nwokomaemmanuel.20211264292@futo.edu.ng", "pin": "20211264292"}, {"name": "Nzemechi Chioma Chinemerem", "email": "nzemechichinemerem.20211277792@futo.edu.ng", "pin": "20211277792"}, {"name": "Obi Michael Chimaobi", "email": "obimichael.20211265722@futo.edu.ng", "pin": "20211265722"}, {"name": "Obikudu Chigozie Jeffrey", "email": "obikuduchigozie.20222314712@futo.edu.ng", "pin": "20222314712"}, {"name": "Obilonu Ifeanyi Divinefavour", "email": "obilonuifeanyi.20211282692@futo.edu.ng", "pin": "20211282692"}, {"name": "Obinna Chidubem Edmund", "email": "obinnachidubem.20211279172@futo.edu.ng", "pin": "20211279172"}, {"name": "Obinna Ifeanyichukwu Bright", "email": "obinnabright.20211295742@futo.edu.ng", "pin": "20211295742"}, {"name": "Odoh Kenneth Ifeanyichukwu", "email": "odohifeanyichukwu.20211261102@futo.edu.ng", "pin": "20211261102"}, {"name": "Odu Lucky Chibuike", "email": "odulucky.20211275872@futo.edu.ng", "pin": "20211275872"}, {"name": "Odu Praise Ebube", "email": "odupraise.20211287512@futo.edu.ng", "pin": "20211287512"}, {"name": "Offorbuike Ekene Collins", "email": "offorbuikecollins.20211290952@futo.edu.ng", "pin": "20211290952"}, {"name": "Ogbuka Iheanacho Victor", "email": "ogbukavictor.20211267302@futo.edu.ng", "pin": "20211267302"}, {"name": "Ogunrobo Eghosa Benedict", "email": "ogunrobobenedict.20211296522@futo.edu.ng", "pin": "20211296522"}, {"name": "Okafor Kosisochukwu Johnpaul", "email": "okaforkosisochukwu.20211287502@futo.edu.ng", "pin": "20211287502"}, {"name": "Okata Chimuanya Emmanuel", "email": "okataemmanuel.20211270312@futo.edu.ng", "pin": "20211270312"}, {"name": "Okeke Prosper-Chinecherem Prince", "email": "okekeprince.20211286122@futo.edu.ng", "pin": "20211286122"}, {"name": "Okereke Clement Kalu", "email": "okerekeclement.20211290762@futo.edu.ng", "pin": "20211290762"}, {"name": "Okoye Ikenna Anthony", "email": "okoyeikenna.20211285402@futo.edu.ng", "pin": "20211285402"}, {"name": "Okoye Victor Ebubechukwu", "email": "okoyeebubechukwu.20211270552@futo.edu.ng", "pin": "20211270552"}, {"name": "Olisa Ewomazino Tennyson", "email": "olisatennyson.20211299882@futo.edu.ng", "pin": "20211299882"}, {"name": "Oluchukwu Prosper Chibuzor", "email": "oluchukwuprosper.20211266722@futo.edu.ng", "pin": "20211266722"}, {"name": "Omeziri Zion Echezona", "email": "omeziriechezona.20211258822@futo.edu.ng", "pin": "20211258822"}, {"name": "Onuoha Chibudom Kelvin", "email": "onuohakelvin.20211282532@futo.edu.ng", "pin": "20211282532"}, {"name": "Onwukwe Ikenna Clinton", "email": "onwukweikenna.20211280112@futo.edu.ng", "pin": "20211280112"}, {"name": "Onyemauche Ifeanyichukwu Victor", "email": "onyemauchevictor.20211282432@futo.edu.ng", "pin": "20211282432"}, {"name": "Onyeukwu Light Onyeyirichi", "email": "onyeukwulight.20211275952@futo.edu.ng", "pin": "20211275952"}, {"name": "Opara Chinasa Jessica", "email": "oparajessica.20211294902@futo.edu.ng", "pin": "20211294902"}, {"name": "Oparanozie Alex Uchenna", "email": "oparanoziealex.20211275572@futo.edu.ng", "pin": "20211275572"}, {"name": "Osuji Chimdi Junior", "email": "osujichimdi.20211261652@futo.edu.ng", "pin": "20211261652"}, {"name": "Ozieme Chimusom Paul", "email": "oziemepaul.20211272952@futo.edu.ng", "pin": "20211272952"}, {"name": "Ozuzu Victor Onyedikachi", "email": "ozuzuvictor.20211274152@futo.edu.ng", "pin": "20211274152"}, {"name": "Samuel Justin Ifiezibe", "email": "samuelifiezibe.20211265072@futo.edu.ng", "pin": "20211265072"}, {"name": "Silas Praise Chinonso", "email": "silaspraise.20201253282@futo.edu.ng", "pin": "20201253282"}, {"name": "Solomon Victoria-Imaobong Conleth", "email": "solomonvictoria-imaobong.20222306772@futo.edu.ng", "pin": "20222306772"}, {"name": "Ubadineke Prince Ugochinyere", "email": "ubadinekeprince.20211265932@futo.edu.ng", "pin": "20211265932"}, {"name": "Uche Chichebem Janefrances", "email": "uchechichebem.20211259052@futo.edu.ng", "pin": "20211259052"}, {"name": "Ugwumba Akachukwu Mac-Anointed", "email": "ugwumbaakachukwu.20223360512@futo.edu.ng", "pin": "20223360512"}, {"name": "Ukeje Marcel Chibundu", "email": "ukejemarcel.20211269952@futo.edu.ng", "pin": "20211269952"}, {"name": "Ukwuoma Chiemerie Gerald", "email": "ukwuomachiemerie.20211277622@futo.edu.ng", "pin": "20211277622"}, {"name": "Uo-fredrick Nkem Fortune", "email": "uo-fredrickfortune.20211266632@futo.edu.ng", "pin": "20211266632"}];
+
+    </script>
+    <script>
+window.SOE_SLATE = {"election": {"title": "Software Engineering Departmental Elections", "department": "Department of Software Engineering", "session": "2025/2026 Session", "reference": "SOE/DPT/2025-2026/001"}, "positions": [{"id": "president", "title": "Departmental President"}, {"id": "vice-president", "title": "Vice President"}, {"id": "secretary", "title": "General Secretary"}, {"id": "finance", "title": "Financial Secretary"}, {"id": "pro", "title": "Public Relations Officer"}, {"id": "welfare", "title": "Welfare Director"}, {"id": "academic", "title": "Academic Director"}], "candidates": [{"id": "pres-garba", "positionId": "president", "name": "Garba Aminu", "year": "500 Level", "manifesto": "Open ledgers for dues, weekly office hours, and a public project gallery that employers can actually read."}, {"id": "pres-ugwumba", "positionId": "president", "name": "Ugwumba Akachukwu Mac-Anointed", "year": "500 Level", "manifesto": "Industry clinics, hardware commons, and a student charter that the executive cannot quietly rewrite."}, {"id": "vp-zainab", "positionId": "vice-president", "name": "Zainab Abdullahi", "year": "400 Level", "manifesto": "Peer mentorship pairs for every 100-level student by week four."}, {"id": "vp-ibrahim", "positionId": "vice-president", "name": "Ibrahim Musa", "year": "400 Level", "manifesto": "A deputy desk that actually answers; no more vanished complaints."}, {"id": "sec-kelvin", "positionId": "secretary", "name": "Kelvin Okeke", "year": "300 Level", "manifesto": "Minutes published within 48 hours, hashed onto the same chain as the votes."}, {"id": "sec-ngozi", "positionId": "secretary", "name": "Ngozi Eze", "year": "300 Level", "manifesto": "A searchable archive of motions so no one can claim a vote that never happened."}, {"id": "fin-fatima", "positionId": "finance", "name": "Fatima Bello", "year": "400 Level", "manifesto": "Monthly spend sheets, receipt photos, and a hard cap on unbudgeted events."}, {"id": "fin-david", "positionId": "finance", "name": "David Nwosu", "year": "400 Level", "manifesto": "Crowdfunded hardware with named donors and named machines \u2014 no black box."}, {"id": "pro-aisha", "positionId": "pro", "name": "Aisha Mohammed", "year": "300 Level", "manifesto": "A department magazine that ships, not a graveyard of unpublished drafts."}, {"id": "pro-emeka", "positionId": "pro", "name": "Emeka Okafor", "year": "300 Level", "manifesto": "Demo days with actual recruiters, not another WhatsApp flyer."}, {"id": "wel-blessing", "positionId": "welfare", "name": "Blessing Chukwu", "year": "200 Level", "manifesto": "Emergency support that arrives the same day, and a quiet room that stays quiet."}, {"id": "wel-yusuf", "positionId": "welfare", "name": "Yusuf Lawal", "year": "200 Level", "manifesto": "Laptop loans with a public queue so the same names stop jumping the line."}, {"id": "acd-sophia", "positionId": "academic", "name": "Sophia Nnamdi", "year": "400 Level", "manifesto": "Night clinics before tests, and a reading list that matches the exam, not the rumour."}, {"id": "acd-patrick", "positionId": "academic", "name": "Patrick Obi", "year": "400 Level", "manifesto": "Industry-aligned workshops every month, recorded and posted for those on SIWES."}]};
+
+    </script>
+    <script>
+const SALT = "SOE-2025-2026-CHAINVOTE";
+const GENESIS = "0".repeat(64);
+const VALIDATORS = [
+  ["val-commission", "Commission node"],
+  ["val-faculty", "Faculty node"],
+  ["val-senate", "Senate node"],
+  ["val-audit", "Audit node"],
+];
+const KEYS = {
+  session: "soe.session",
+  chain: "soe.chain",
+  voted: "soe.voted",
+};
+
+const $app = document.getElementById("app");
+const state = {
+  route: "home",
+  roll: Array.isArray(window.SOE_ROLL) ? window.SOE_ROLL : [],
+  slate: window.SOE_SLATE || null,
+  session: null,
+  chain: [],
+  voted: [],
+  marks: {},
+  office: "president",
+  error: "",
+  busy: false,
+  identityEmail: "",
+  identityPin: "",
+};
+
+function stripInvisible(raw) {
+  return String(raw || "").replace(/[\u200b-\u200d\ufeff\u00a0]/g, "").trim();
+}
+
+function normalizeEmail(raw) {
+  let e = stripInvisible(raw).toLowerCase().replace(/\s+/g, "");
+  if (!e) return e;
+  if (!e.includes("@")) e = e + "@futo.edu.ng";
+  return e;
+}
+
+function normalizeReg(raw) {
+  return stripInvisible(raw).replace(/\D/g, "");
+}
+
+function lettersOnly(s) {
+  return String(s).toLowerCase().replace(/[^a-z]/g, "");
+}
+
+function attr(value) {
+  const amp = String.fromCharCode(38);
+  return String(value || "")
+    .replace(/&/g, amp + "amp;")
+    .replace(/"/g, amp + "quot;")
+    .replace(/</g, amp + "lt;");
+}
+
+function tokens(s) {
+  return String(s)
+    .toLowerCase()
+    .split(/[^a-z]+/)
+    .filter(function (t) {
+      return t.length >= 2;
+    });
+}
+
+function emailFitsRoll(email, row) {
+  const e = normalizeEmail(email);
+  const parts = e.split("@");
+  const local = parts[0] || "";
+  const domain = parts[1] || "";
+  if (!local) return false;
+  if (domain && domain !== "futo.edu.ng") return false;
+  const rollLocal = (row.email.split("@")[0] || "").toLowerCase();
+  if (e === row.email.toLowerCase()) return true;
+  if (local === rollLocal) return true;
+  if (local === row.pin) return true;
+  const pinRe = new RegExp(row.pin, "g");
+  const localNoPin = local.replace(pinRe, "").replace(/^[._-]+|[._-]+$/g, "");
+  const rollNoPin = rollLocal.replace(pinRe, "").replace(/^[._-]+|[._-]+$/g, "");
+  const localLetters = lettersOnly(localNoPin);
+  const nameLetters = lettersOnly(row.name || "");
+  const rollLetters = lettersOnly(rollNoPin);
+  if (localLetters && (localLetters === nameLetters || localLetters === rollLetters)) return true;
+  if (localLetters.length >= 5 && (nameLetters.indexOf(localLetters) !== -1 || rollLetters.indexOf(localLetters) !== -1)) {
+    return true;
+  }
+  if (rollLetters.length >= 5 && localLetters.indexOf(rollLetters) !== -1) return true;
+  const nameToks = tokens(row.name || "");
+  const emailToks = tokens(localNoPin);
+  if (
+    emailToks.length &&
+    emailToks.every(function (t) {
+      return nameToks.some(function (n) {
+        return n === t || n.indexOf(t) !== -1 || t.indexOf(n) !== -1;
+      });
+    })
+  ) {
+    return true;
+  }
+  return false;
+}
+
+function findOnRoll(email, pin) {
+  const p = normalizeReg(pin);
+  if (p.length < 8) return null;
+  const byPin = state.roll.filter(function (r) {
+    return r.pin === p;
+  });
+  if (byPin.length === 1) return byPin[0];
+  if (!byPin.length) return null;
+  const e = normalizeEmail(email);
+  return (
+    byPin.find(function (r) {
+      return r.email.toLowerCase() === e;
+    }) || null
+  );
+}
+
+async function sha256Hex(input) {
+  const bytes = new TextEncoder().encode(input);
+  if (globalThis.crypto && crypto.subtle && crypto.subtle.digest) {
+    try {
+      const digest = await crypto.subtle.digest("SHA-256", bytes);
+      return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+    } catch (err) {
+      /* file:// WebViews often block SubtleCrypto — fall through */
+    }
+  }
+  return sha256HexSync(String(input));
+}
+
+function sha256HexSync(ascii) {
+  function rightRotate(value, amount) {
+    return (value >>> amount) | (value << (32 - amount));
+  }
+  const mathPow = Math.pow;
+  const maxWord = mathPow(2, 32);
+  const lengthProperty = "length";
+  let i, j;
+  const result = [];
+  const words = [];
+  const asciiBitLength = ascii[lengthProperty] * 8;
+  let hash = (sha256HexSync.h = sha256HexSync.h || []);
+  const k = (sha256HexSync.k = sha256HexSync.k || []);
+  let primeCounter = k[lengthProperty];
+  const isComposite = {};
+  for (let candidate = 2; primeCounter < 64; candidate++) {
+    if (!isComposite[candidate]) {
+      for (i = 0; i < 313; i += candidate) isComposite[i] = candidate;
+      hash[primeCounter] = (mathPow(candidate, 0.5) * maxWord) | 0;
+      k[primeCounter++] = (mathPow(candidate, 1 / 3) * maxWord) | 0;
+    }
+  }
+  ascii += "\x80";
+  while ((ascii[lengthProperty] % 64) - 56) ascii += "\x00";
+  for (i = 0; i < ascii[lengthProperty]; i++) {
+    j = ascii.charCodeAt(i);
+    if (j >> 8) return "";
+    words[i >> 2] |= j << (((3 - i) % 4) * 8);
+  }
+  words[words[lengthProperty]] = (asciiBitLength / maxWord) | 0;
+  words[words[lengthProperty]] = asciiBitLength;
+  for (j = 0; j < words[lengthProperty]; ) {
+    const w = words.slice(j, (j += 16));
+    const oldHash = hash;
+    hash = hash.slice(0, 8);
+    for (i = 0; i < 64; i++) {
+      const w15 = w[i - 15];
+      const w2 = w[i - 2];
+      const a = hash[0];
+      const e = hash[4];
+      const temp1 =
+        hash[7] +
+        (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25)) +
+        ((e & hash[5]) ^ (~e & hash[6])) +
+        k[i] +
+        (w[i] =
+          i < 16
+            ? w[i]
+            : (w[i - 16] +
+                (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3)) +
+                w[i - 7] +
+                (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))) |
+              0);
+      const temp2 =
+        (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22)) +
+        ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
+      hash = [(temp1 + temp2) | 0].concat(hash);
+      hash[4] = (hash[4] + temp1) | 0;
+      hash.pop();
+    }
+    for (i = 0; i < 8; i++) hash[i] = (hash[i] + oldHash[i]) | 0;
+  }
+  for (i = 0; i < 8; i++) {
+    for (j = 3; j + 1; j--) {
+      const b = (hash[i] >> (j * 8)) & 255;
+      result.push((b < 16 ? "0" : "") + b.toString(16));
+    }
+  }
+  return result.join("");
+}
+
+async function voterCommitment(email, pin) {
+  return sha256Hex(`${SALT}|${email.trim().toLowerCase()}|${pin.trim()}`);
+}
+
+async function merkleRoot(leaves) {
+  if (!leaves.length) return sha256Hex("empty");
+  let layer = [...leaves];
+  if (layer.length % 2 === 1) layer.push(layer.at(-1));
+  while (layer.length > 1) {
+    const next = [];
+    for (let i = 0; i < layer.length; i += 2) next.push(await sha256Hex(`${layer[i]}${layer[i + 1]}`));
+    layer = next;
+    if (layer.length % 2 === 1 && layer.length > 1) layer.push(layer.at(-1));
+  }
+  return layer[0];
+}
+
+async function attest(hash) {
+  const prepares = [];
+  const commits = [];
+  for (const [id, name] of VALIDATORS) {
+    prepares.push({ id, name, phase: "prepare", signature: await sha256Hex(`${id}|prepare|${hash}`) });
+    commits.push({ id, name, phase: "commit", signature: await sha256Hex(`${id}|commit|${hash}`) });
+  }
+  return { faultTolerance: 1, quorum: 3, committed: commits.length >= 3, prepares, commits };
+}
+
+async function sealBlock(previousHash, transactions, index) {
+  const timestamp = Date.now();
+  const leaves = await Promise.all(
+    transactions.map((tx) => sha256Hex(`${tx.voterCommitment}|${tx.positionId}|${tx.candidateId}|${tx.timestamp}`)),
+  );
+  const root = await merkleRoot(leaves);
+  const hash = await sha256Hex(`${index}|${timestamp}|${previousHash}|${root}|0`);
+  const bft = await attest(hash);
+  return { index, timestamp, previousHash, merkleRoot: root, hash, nonce: 0, transactions, bft };
+}
+
+function loadLocal() {
+  try {
+    state.session = JSON.parse(localStorage.getItem(KEYS.session) || "null");
+  } catch {
+    state.session = null;
+  }
+  try {
+    state.chain = JSON.parse(localStorage.getItem(KEYS.chain) || "[]");
+  } catch {
+    state.chain = [];
+  }
+  try {
+    state.voted = JSON.parse(localStorage.getItem(KEYS.voted) || "[]");
+  } catch {
+    state.voted = [];
+  }
+}
+
+function persist() {
+  if (state.session) localStorage.setItem(KEYS.session, JSON.stringify(state.session));
+  else localStorage.removeItem(KEYS.session);
+  localStorage.setItem(KEYS.chain, JSON.stringify(state.chain));
+  localStorage.setItem(KEYS.voted, JSON.stringify(state.voted));
+}
+
+function maskEmail(email) {
+  const [user, host] = email.split("@");
+  if (!user || !host) return email;
+  return `${user.slice(0, 2)}•••@${host}`;
+}
+
+function go(route) {
+  state.route = route;
+  render();
+}
+
+function html(strings, ...vals) {
+  return strings.reduce((out, s, i) => out + s + (vals[i] ?? ""), "");
+}
+
+function nav() {
+  const items = [
+    ["home", "Home"],
+    ["vote", "Vote"],
+    ["chain", "Chain"],
+    ["tally", "Tally"],
+  ];
+  return `<nav class="nav">${items
+    .map(
+      ([id, label]) =>
+        `<button class="${state.route === id ? "active" : ""}" data-go="${id}">${label}</button>`,
+    )
+    .join("")}</nav>`;
+}
+
+function loginView() {
+  return html`
+    <div class="app">
+      <div class="row">
+        <img class="seal" src="/soe-seal.png" alt="" />
+        <div>
+          <p class="kicker">Department of Software Engineering</p>
+          <p class="brand display">SOE Chainvote</p>
+        </div>
+      </div>
+      <h1>Sign in to the 2025/2026 booth.</h1>
+      <p>Anyone on the 2025/2026 class list (88 students) can sign in with their registration number plus FUTO email or full name. This booth runs on the phone — no remote server is required to open a session or seal a ballot.</p>
+      <form class="stack" id="login-form">
+        <div>
+          <label for="email">FUTO email or student name</label>
+          <input id="email" type="text" inputmode="text" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Garba Aminu or you@futo.edu.ng" value="${attr(state.identityEmail)}" required />
+        </div>
+        <div>
+          <label for="reg">Registration number</label>
+          <input id="reg" inputmode="numeric" autocomplete="off" placeholder="e.g. 20211288832" value="${attr(state.identityPin)}" required />
+        </div>
+        ${state.error ? `<p class="alert" role="alert">${state.error}</p>` : ""}
+        <button class="btn" ${state.busy ? "disabled" : ""}>${state.busy ? "Checking the roll…" : "Sign in"}</button>
+      </form>
+      <p class="note">Private BFT chain · one ballot per student · marks stored as a SHA-256 commitment, never a name.</p>
+    </div>`;
+}
+
+function homeView() {
+  const blocks = state.chain.length;
+  const ballots = new Set(state.chain.flatMap((b) => b.transactions.map((t) => t.voterCommitment))).size;
+  return html`
+    <div class="app">
+      <div class="row">
+        <img class="seal" src="/soe-seal.png" alt="" />
+        <div>
+          <p class="kicker">2025/2026 session</p>
+          <p class="brand display">SOE Chainvote</p>
+        </div>
+      </div>
+      <p style="margin-top:1.4rem">${state.session?.maskedEmail} · signed in on this phone</p>
+      <div class="stack">
+        <div class="card"><p class="stat">${blocks}</p><p>Sealed blocks</p></div>
+        <div class="card"><p class="stat">${ballots}</p><p>Distinct ballots</p></div>
+        <div class="card"><p class="stat">${state.voted.length}/7</p><p>Offices you have marked</p></div>
+        <p>Permissioned PBFT · 4 nodes · f = 1 · quorum 3. Offline marks stay on this device until the chain seals them.</p>
+        <button class="btn" data-go="vote">Open booth</button>
+        <button class="btn btn-ghost" id="sign-out">Sign out this device</button>
+      </div>
+    </div>${nav()}`;
+}
+
+function voteView() {
+  const offices = state.slate.positions;
+  const office = offices.find((p) => p.id === state.office) ?? offices[0];
+  const already = state.voted.includes(office.id);
+  const people = state.slate.candidates.filter((c) => c.positionId === office.id);
+  return html`
+    <div class="app">
+      <p class="kicker">Ballot</p>
+      <h1>${office.title}</h1>
+      <p>${already ? "This office is already sealed for your commitment." : "Pick one candidate. The mark is hashed; your name never enters the block."}</p>
+      <div class="stack" style="grid-template-columns:1fr 1fr; gap:0.5rem">
+        ${offices
+          .map(
+            (p) =>
+              `<button class="btn ${p.id === office.id ? "" : "btn-ghost"}" style="height:40px;font-size:0.75rem" data-office="${p.id}">${p.title.replace("Departmental ", "")}</button>`,
+          )
+          .join("")}
+      </div>
+      ${people
+        .map((c) => {
+          const selected = state.marks[office.id] === c.id;
+          return `<button class="choice ${selected ? "selected" : ""}" data-pick="${c.id}" ${already ? "disabled" : ""}>
+            <strong>${c.name}</strong>
+            <span>${c.year} · ${c.manifesto}</span>
+          </button>`;
+        })
+        .join("")}
+      ${state.error ? `<p class="alert">${state.error}</p>` : ""}
+      <button class="btn" id="cast" ${already || !state.marks[office.id] || state.busy ? "disabled" : ""}>
+        ${already ? "Already sealed" : state.busy ? "Sealing with BFT…" : "Cast ballot"}
+      </button>
+    </div>${nav()}`;
+}
+
+function chainView() {
+  const blocks = [...state.chain].reverse();
+  return html`
+    <div class="app">
+      <p class="kicker">Private ledger</p>
+      <h1>Hash chain</h1>
+      <p>Each block carries previousHash, a Merkle root, and a PBFT certificate from 4 permissioned nodes.</p>
+      ${blocks.length === 0 ? `<div class="card">Genesis has not been extended yet. Cast a ballot to seal block 1.</div>` : ""}
+      ${blocks
+        .map(
+          (b) => `<div class="card" style="margin-bottom:0.8rem">
+            <p class="badge">Block ${b.index} · ${b.bft?.committed ? "Sealed by BFT" : "pending"}</p>
+            <p class="hash">hash ${b.hash}</p>
+            <p class="hash">prev ${b.previousHash}</p>
+            <p class="hash">merkle ${b.merkleRoot}</p>
+            <p class="hash">quorum ${b.bft?.commits?.length ?? 0}/4 commit</p>
+          </div>`,
+        )
+        .join("")}
+    </div>${nav()}`;
+}
+
+function tallyView() {
+  const counts = {};
+  for (const block of state.chain) {
+    for (const tx of block.transactions) {
+      counts[tx.candidateId] = (counts[tx.candidateId] || 0) + 1;
+    }
+  }
+  return html`
+    <div class="app">
+      <p class="kicker">Public tally</p>
+      <h1>Results</h1>
+      ${state.slate.positions
+        .map((p) => {
+          const people = state.slate.candidates.filter((c) => c.positionId === p.id);
+          return `<div class="card" style="margin:0.8rem 0">
+            <strong>${p.title}</strong>
+            ${people
+              .map(
+                (c) =>
+                  `<div class="tally"><span>${c.name}</span><span>${counts[c.id] || 0}</span></div>`,
+              )
+              .join("")}
+          </div>`;
+        })
+        .join("")}
+    </div>${nav()}`;
+}
+
+function render() {
+  if (!state.session) {
+    $app.innerHTML = loginView();
+    $app.querySelector("#login-form")?.addEventListener("submit", onLogin);
+    return;
+  }
+  if (state.route === "vote") $app.innerHTML = voteView();
+  else if (state.route === "chain") $app.innerHTML = chainView();
+  else if (state.route === "tally") $app.innerHTML = tallyView();
+  else $app.innerHTML = homeView();
+  $app.querySelectorAll("[data-go]").forEach((el) =>
+    el.addEventListener("click", () => go(el.getAttribute("data-go"))),
+  );
+  $app.querySelectorAll("[data-office]").forEach((el) =>
+    el.addEventListener("click", () => {
+      state.office = el.getAttribute("data-office");
+      state.error = "";
+      render();
+    }),
+  );
+  $app.querySelectorAll("[data-pick]").forEach((el) =>
+    el.addEventListener("click", () => {
+      state.marks[state.office] = el.getAttribute("data-pick");
+      render();
+    }),
+  );
+  $app.querySelector("#cast")?.addEventListener("click", onCast);
+  $app.querySelector("#sign-out")?.addEventListener("click", () => {
+    state.session = null;
+    persist();
+    go("home");
+  });
+}
+
+async function onLogin(event) {
+  event.preventDefault();
+  const emailEl = document.getElementById("email");
+  const regEl = document.getElementById("reg");
+  const email = emailEl ? emailEl.value : state.identityEmail;
+  const pin = regEl ? regEl.value : state.identityPin;
+  state.identityEmail = email;
+  state.identityPin = pin;
+  state.error = "";
+  state.busy = true;
+  render();
+  const hit = findOnRoll(email, pin);
+  if (!hit) {
+    state.busy = false;
+    state.error =
+      state.roll.length === 0
+        ? "The class roll did not load on this phone. Uninstall SOE Chainvote and install 1.2.2."
+        : "This registration number is not on the 2025/2026 Software Engineering class list.";
+    render();
+    return;
+  }
+  const commitment = await voterCommitment(hit.email, hit.pin);
+  state.session = {
+    email: hit.email,
+    commitment,
+    maskedEmail: maskEmail(hit.email),
+    signedInAt: Date.now(),
+  };
+  state.busy = false;
+  persist();
+  go("home");
+}
+
+async function onCast() {
+  const office = state.office;
+  const candidateId = state.marks[office];
+  if (!state.session || !candidateId || state.voted.includes(office)) return;
+  state.busy = true;
+  state.error = "";
+  render();
+  const tx = {
+    voterCommitment: state.session.commitment,
+    positionId: office,
+    candidateId,
+    timestamp: Date.now(),
+  };
+  const prev = state.chain.at(-1)?.hash ?? GENESIS;
+  const block = await sealBlock(prev, [tx], state.chain.length + 1);
+  state.chain.push(block);
+  state.voted.push(office);
+  persist();
+  state.busy = false;
+  go("chain");
+}
+
+async function boot() {
+  try {
+    if (!state.roll.length && Array.isArray(window.SOE_ROLL)) state.roll = window.SOE_ROLL;
+    if (!state.slate && window.SOE_SLATE) state.slate = window.SOE_SLATE;
+    loadLocal();
+    if (!state.chain.length) {
+      const genesis = await sealBlock(GENESIS, [], 0);
+      genesis.transactions = [];
+      state.chain = [genesis];
+      persist();
+    }
+  } catch (err) {
+    state.error = "Booth engine failed to start. Reinstall SOE Chainvote 1.3.0.";
+  }
+  render();
+}
+
+boot();
+
+    </script>
+  </body>
+</html>

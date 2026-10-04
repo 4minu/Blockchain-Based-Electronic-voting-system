@@ -11,6 +11,28 @@ import { getElectionSnapshot } from "@/lib/election-api";
 import { cacheElectionSnapshot } from "@/lib/use-election";
 import { useVoterStore, type VoterSession } from "@/lib/voter-store";
 import { useOfflineStore } from "@/lib/offline-store";
+import { CLASS_ROLL } from "@/lib/class-roll";
+import { findOnRoll } from "@/lib/roll-match";
+import { voterCommitment } from "@/lib/chain";
+
+async function openLocalBooth(email: string, regNumber: string): Promise<VoterSession | null> {
+  const row = findOnRoll(CLASS_ROLL, email, regNumber);
+  if (!row) return null;
+  const commitment = await voterCommitment(row.studentId, row.pin);
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  const token = `local-${[...bytes].map((b) => b.toString(16).padStart(2, "0")).join("")}`;
+  const [local, domain] = row.studentId.split("@");
+  const maskedEmail =
+    local && domain ? `${local.slice(0, 2)}***@${domain}` : row.name;
+  return {
+    token,
+    commitment,
+    maskedEmail,
+    expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 120,
+    votedPositionIds: [],
+  };
+}
 
 export function LoginScreen() {
   const navigate = useNavigate();
@@ -47,39 +69,59 @@ export function LoginScreen() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!navigator.onLine) {
-      setError(
-        "Internet is required for the first sign-in. After that, this device stays signed in and can vote offline.",
-      );
-      return;
-    }
     setBusy(true);
     try {
-      const result = await signInVoter({ data: { email, regNumber } });
-      if (!result.ok) {
-        setError(result.message);
+      const local = await openLocalBooth(email, regNumber);
+      if (!local) {
+        setError(
+          "This registration number is not on the 2025/2026 Software Engineering class list.",
+        );
         return;
       }
-      const next: VoterSession = {
-        token: result.token,
-        commitment: result.commitment,
-        maskedEmail: result.maskedEmail,
-        expiresAt: result.expiresAt,
-        votedPositionIds: result.votedPositionIds,
-      };
-      setSession(next);
-      void getElectionSnapshot()
-        .then(cacheElectionSnapshot)
-        .catch(() => undefined);
+
+      if (navigator.onLine) {
+        try {
+          const result = await Promise.race([
+            signInVoter({ data: { email, regNumber } }),
+            new Promise<null>((resolve) => {
+              window.setTimeout(() => resolve(null), 8000);
+            }),
+          ]);
+          if (result?.ok) {
+            const next: VoterSession = {
+              token: result.token,
+              commitment: result.commitment,
+              maskedEmail: result.maskedEmail,
+              expiresAt: result.expiresAt,
+              votedPositionIds: result.votedPositionIds,
+            };
+            setSession(next);
+            void getElectionSnapshot()
+              .then(cacheElectionSnapshot)
+              .catch(() => undefined);
+            toast("Signed in", {
+              description:
+                "This device stays signed in. You can vote even if the network drops.",
+            });
+            await navigate({ to: "/" });
+            return;
+          }
+        } catch {
+          /* chain server unreachable — continue with the on-device roll */
+        }
+      }
+
+      setSession(local);
       toast("Signed in", {
-        description: "This device stays signed in. You can vote even if the network drops.",
+        description:
+          "Booth opened on this device. Ballots seal locally and sync when the chain is reachable.",
       });
       await navigate({ to: "/" });
     } catch (err) {
       setError(
         err instanceof Error
           ? err.message
-          : "Could not reach the roll. Check your connection and try again.",
+          : "Could not open the booth. Check the class-list details and try again.",
       );
     } finally {
       setBusy(false);
@@ -102,18 +144,18 @@ export function LoginScreen() {
           Sign in to the 2025/2026 booth.
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-          First sign-in needs the internet. Anyone on the 2025/2026 Software
-          Engineering class list (88 students) can sign in with their
-          <span className="text-foreground"> registration number</span> plus
-          FUTO email or full name. After that this phone stays signed in so you
-          can vote offline.
+          First sign-in checks the 2025/2026 Software Engineering class list
+          (88 students) on this device. Use your registration number plus FUTO
+          email or full name. The session stays here so you can vote even if
+          the chain server is unreachable.
         </p>
 
         {!networkOnline && (
           <div className="mt-6 flex items-start gap-3 rounded-xl border border-border bg-secondary p-4">
             <WifiOff className="mt-0.5 size-4 shrink-0 text-accent" />
             <p className="text-sm text-muted-foreground">
-              You are offline. Connect once to authenticate against the class roll.
+              You are offline. The class roll still opens on this device; ballots
+              queue until the chain is reachable.
             </p>
           </div>
         )}
@@ -157,7 +199,7 @@ export function LoginScreen() {
           <Button
             type="submit"
             className="h-12 w-full"
-            disabled={busy || !networkOnline}
+            disabled={busy}
           >
             {busy && <LoaderCircle className="size-4 animate-spin" />}
             {busy ? "Checking the roll…" : "Sign in"}
